@@ -133,6 +133,7 @@ def iterate_pagerank(corpus, damping_factor):
     num_pages = len(corpus_copy)
     equal_probability = 1 / num_pages
 
+    # initialize page ranks
     ranks = {page: equal_probability for page in list(corpus_copy.keys())}
     old_ranks = dict()
 
@@ -145,10 +146,12 @@ def iterate_pagerank(corpus, damping_factor):
         for rank in ranks:
             random_prob = (1 - damping_factor) / num_pages
             link_prob = 0
-            # page and rank are in fact represented by the same thing: a page string name
+            # page and rank represent the same thing in two different contexts: a page name string
             for page in corpus_copy:
+                # a page that has no links at all is interpreted as having one link for every page in the corpus
                 if len(corpus_copy[page]) == 0:
                     corpus_copy[page] = {page for page in corpus_copy}
+                # a page that has link to the current rank
                 if rank in corpus_copy[page]:
                     link_prob += ranks[page] / len(corpus_copy[page])
 
