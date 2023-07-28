@@ -17,10 +17,10 @@ def main():
     for page in sorted(ranks):
         print(f"  {page}: {ranks[page]:.4f}")
 
-    # ranks = iterate_pagerank(corpus, DAMPING)
-    # print(f"PageRank Results from Iteration")
-    # for page in sorted(ranks):
-    #     print(f"  {page}: {ranks[page]:.4f}")
+    ranks = iterate_pagerank(corpus, DAMPING)
+    print(f"PageRank Results from Iteration")
+    for page in sorted(ranks):
+        print(f"  {page}: {ranks[page]:.4f}")
 
 
 def crawl(directory):
@@ -105,6 +105,19 @@ def sample_pagerank(corpus, damping_factor, n):
     return ranks
 
 
+def is_coverged(old_ranks, new_ranks):
+    if old_ranks == {} or new_ranks == {}:
+        return False
+
+    CONVERGENCE = 0.001
+
+    for page in old_ranks:
+        if new_ranks[page] - old_ranks[page] > CONVERGENCE:
+            return False
+
+    return True
+
+
 def iterate_pagerank(corpus, damping_factor):
     """
     Return PageRank values for each page by iteratively updating
@@ -114,7 +127,34 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+
+    # assigning each page a rank of 1 / total number of pages in the corpus
+    corpus_copy = corpus.copy()
+    num_pages = len(corpus_copy)
+    equal_probability = 1 / num_pages
+
+    ranks = {page: equal_probability for page in list(corpus_copy.keys())}
+    old_ranks = dict()
+
+    while True:
+        if is_coverged(old_ranks, ranks):
+            break
+
+        old_ranks = ranks.copy()
+
+        for rank in ranks:
+            random_prob = (1 - damping_factor) / num_pages
+            link_prob = 0
+            # page and rank are in fact represented by the same thing: a page string name
+            for page in corpus_copy:
+                if len(corpus_copy[page]) == 0:
+                    corpus_copy[page] = {page for page in corpus_copy}
+                if rank in corpus_copy[page]:
+                    link_prob += ranks[page] / len(corpus_copy[page])
+
+            ranks[rank] = random_prob + damping_factor * link_prob
+
+    return ranks
 
 
 if __name__ == "__main__":
