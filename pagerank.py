@@ -12,23 +12,10 @@ def main():
         sys.exit("Usage: python pagerank.py corpus")
     corpus = crawl(sys.argv[1])
 
-    print(corpus)
-    print(
-        transition_model(
-            {
-                "1.html": {},
-                "2.html": {"3.html"},
-                "3.html": {"2.html"},
-            },
-            "1.html",
-            0.85,
-        )
-    )
-
-    # ranks = sample_pagerank(corpus, DAMPING, SAMPLES)
-    # print(f"PageRank Results from Sampling (n = {SAMPLES})")
-    # for page in sorted(ranks):
-    #     print(f"  {page}: {ranks[page]:.4f}")
+    ranks = sample_pagerank(corpus, DAMPING, SAMPLES)
+    print(f"PageRank Results from Sampling (n = {SAMPLES})")
+    for page in sorted(ranks):
+        print(f"  {page}: {ranks[page]:.4f}")
 
     # ranks = iterate_pagerank(corpus, DAMPING)
     # print(f"PageRank Results from Iteration")
@@ -104,7 +91,18 @@ def sample_pagerank(corpus, damping_factor, n):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+
+    page = random.choice(list(corpus.keys()))
+    samples = [page]
+
+    for _ in range(n - 1):
+        model = transition_model(corpus, page, damping_factor)
+        page = random.choices(list(model.keys()), weights=model.values())[0]
+        samples.append(page)
+
+    ranks = {page: samples.count(page) / n for page in samples}
+
+    return ranks
 
 
 def iterate_pagerank(corpus, damping_factor):
