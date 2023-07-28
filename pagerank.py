@@ -11,14 +11,29 @@ def main():
     if len(sys.argv) != 2:
         sys.exit("Usage: python pagerank.py corpus")
     corpus = crawl(sys.argv[1])
-    ranks = sample_pagerank(corpus, DAMPING, SAMPLES)
-    print(f"PageRank Results from Sampling (n = {SAMPLES})")
-    for page in sorted(ranks):
-        print(f"  {page}: {ranks[page]:.4f}")
-    ranks = iterate_pagerank(corpus, DAMPING)
-    print(f"PageRank Results from Iteration")
-    for page in sorted(ranks):
-        print(f"  {page}: {ranks[page]:.4f}")
+
+    print(corpus)
+    print(
+        transition_model(
+            {
+                "1.html": {},
+                "2.html": {"3.html"},
+                "3.html": {"2.html"},
+            },
+            "1.html",
+            0.85,
+        )
+    )
+
+    # ranks = sample_pagerank(corpus, DAMPING, SAMPLES)
+    # print(f"PageRank Results from Sampling (n = {SAMPLES})")
+    # for page in sorted(ranks):
+    #     print(f"  {page}: {ranks[page]:.4f}")
+
+    # ranks = iterate_pagerank(corpus, DAMPING)
+    # print(f"PageRank Results from Iteration")
+    # for page in sorted(ranks):
+    #     print(f"  {page}: {ranks[page]:.4f}")
 
 
 def crawl(directory):
@@ -40,10 +55,7 @@ def crawl(directory):
 
     # Only include links to other pages in the corpus
     for filename in pages:
-        pages[filename] = set(
-            link for link in pages[filename]
-            if link in pages
-        )
+        pages[filename] = set(link for link in pages[filename] if link in pages)
 
     return pages
 
@@ -57,7 +69,30 @@ def transition_model(corpus, page, damping_factor):
     linked to by `page`. With probability `1 - damping_factor`, choose
     a link at random chosen from all pages in the corpus.
     """
-    raise NotImplementedError
+
+    corpus_copy = corpus.copy()
+
+    model = {page: 0 for page in corpus_copy}
+    num_page = len(model)
+
+    # if page has no outgoing links, pretend it has links to all pages in the corpus, including itself
+    if len(corpus_copy[page]) == 0:
+        corpus_copy[page] = {page for page in corpus_copy}
+
+    links = corpus_copy[page]
+    num_links = len(links)
+
+    # with probability damping_factor, choose one of the links with equal probability
+    link_probability = round(damping_factor / num_links, 5)
+    for link in links:
+        model[link] = link_probability
+
+    # with probability (1 - damping_factor), randomly choose one of all pages in the corpus with equal probability
+    page_probability = round((1 - damping_factor) / num_page, 5)
+    for page in corpus_copy:
+        model[page] += page_probability
+
+    return model
 
 
 def sample_pagerank(corpus, damping_factor, n):
