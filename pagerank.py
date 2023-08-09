@@ -160,10 +160,6 @@ def iterate_pagerank(corpus, damping_factor):
         if is_coverged(old_ranks, ranks):
             break
 
-    # print(ranks)
-    print(corpus_copy)
-
-    print("SUM", sum(ranks.values()))
     return ranks
 
 
