@@ -112,7 +112,7 @@ def is_coverged(old_ranks, new_ranks):
     CONVERGENCE = 0.001
 
     for page in old_ranks:
-        if new_ranks[page] - old_ranks[page] > CONVERGENCE:
+        if abs(new_ranks[page] - old_ranks[page]) > CONVERGENCE:
             return False
 
     return True
@@ -134,29 +134,36 @@ def iterate_pagerank(corpus, damping_factor):
     equal_probability = 1 / num_pages
 
     # initialize page ranks
-    ranks = {page: equal_probability for page in list(corpus_copy.keys())}
+    ranks = {page: equal_probability for page in corpus_copy}
     old_ranks = dict()
 
-    while True:
-        if is_coverged(old_ranks, ranks):
-            break
+    # (1 - d) / N
+    random_prob = (1 - damping_factor) / num_pages
 
+    while True:
         old_ranks = ranks.copy()
 
         for rank in ranks:
-            random_prob = (1 - damping_factor) / num_pages
-            link_prob = 0
+            sum_link_prob = 0
+
             # page and rank represent the same thing in two different contexts: a page name string
             for page in corpus_copy:
                 # a page that has no links at all is interpreted as having one link for every page in the corpus
                 if len(corpus_copy[page]) == 0:
-                    corpus_copy[page] = {page for page in corpus_copy}
+                    corpus_copy[page] = {p for p in corpus_copy}
                 # a page that has link to the current rank
                 if rank in corpus_copy[page]:
-                    link_prob += ranks[page] / len(corpus_copy[page])
+                    sum_link_prob += old_ranks[page] / len(corpus_copy[page])
 
-            ranks[rank] = random_prob + damping_factor * link_prob
+            ranks[rank] = random_prob + damping_factor * sum_link_prob
 
+        if is_coverged(old_ranks, ranks):
+            break
+
+    # print(ranks)
+    print(corpus_copy)
+
+    print("SUM", sum(ranks.values()))
     return ranks
 
 
